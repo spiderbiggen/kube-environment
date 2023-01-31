@@ -1,0 +1,12 @@
+{
+    "configurations": [
+        {
+            "type": "cargo",
+            "name": "Run",
+            "cargoArgs": ["run", "--package", "kube-environment", "--bin", "kube-environment"],
+            "environment": {
+                "RUST_LOG": "trace"
+            },
+        },
+    ]
+}
