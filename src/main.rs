@@ -10,6 +10,10 @@ use kube::api::{Patch, PatchParams, ValidationDirective};
 use kube::error::Error as KubeError;
 use serde::Deserialize;
 use serde_json::{json, Value};
+use tower::ServiceBuilder;
+use tower_http::compression::CompressionLayer;
+use tower_http::decompression::DecompressionLayer;
+use tower_http::trace::TraceLayer;
 use tracing::instrument;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -31,7 +35,13 @@ async fn main() -> Result<()> {
 
     let app = Router::new()
         .route("/deployments/:name", get(query).patch(deploy))
-        .with_state(state);
+        .with_state(state)
+        .layer(
+            ServiceBuilder::new()
+                .layer(TraceLayer::new_for_http())
+                .layer(CompressionLayer::new())
+                .layer(DecompressionLayer::new()),
+        );
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8000));
     axum::Server::bind(&addr)
