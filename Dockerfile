@@ -17,7 +17,7 @@ case "$TARGETPLATFORM" in
 esac
 EOF
 
-RUN rustup target add "$CARGO_BUILD_TARGET"
+RUN rustup target add $CARGO_BUILD_TARGET
 
 WORKDIR /app/builder
 COPY . ./
