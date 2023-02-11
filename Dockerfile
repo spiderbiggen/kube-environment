@@ -14,6 +14,7 @@ case "$TARGETPLATFORM" in
     echo vendored > /rust-features.txt
     echo aarch64-unknown-linux-gnu > /rust_target.txt ;;
   "linux/amd64")
+    echo default > /rust-features.txt
     echo x86_64-unknown-linux-gnu > /rust_target.txt ;;
   *)
     exit 1 ;;
