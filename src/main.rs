@@ -1,9 +1,7 @@
 use std::net::SocketAddr;
 
 use anyhow::Result;
-use axum::response::IntoResponse;
 use axum::{routing::get, Router};
-use serde::Deserialize;
 use tower::ServiceBuilder;
 use tower_http::compression::CompressionLayer;
 use tower_http::decompression::DecompressionLayer;

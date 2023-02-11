@@ -13,7 +13,8 @@ futures = "0.3.25"
 http = "0.2"
 kube = { version = "0.78.0", features = ["runtime", "derive"] }
 k8s-openapi = { version = "0.17.0", features = ["v1_26"] }
-reqwest = { version = "0.11.14",  features = ["json"] }
+openssl = { version = "0.10.45" }
+reqwest = { version = "0.11.14", features = ["json"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1.21.2", features = ["full"] }
@@ -21,4 +22,9 @@ tower = "0.4"
 tower-http = { version = "0.3", features = ["trace", "decompression-full", "compression-full"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-url = { version = "2", features = ["serde"]}
+url = { version = "2", features = ["serde"] }
+
+[features]
+default = []
+
+vendored = ["openssl/vendored"]

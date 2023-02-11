@@ -2,7 +2,7 @@ name: Deployment
 
 on:
   push:
-    branches: ['*']
+    branches: [ '*' ]
     # Publish semver tags as releases.
     tags: [ 'v*.*.*' ]
 
@@ -22,9 +22,9 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Test
-        run: cargo test --release --all-features --no-fail-fast
+        run: cargo test --release --no-fail-fast
       - name: Build
-        run: cargo build --release --all-features
+        run: cargo build --release
 
   publish:
     needs: test
