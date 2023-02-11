@@ -14,17 +14,17 @@ env:
 
 
 jobs:
-#  test:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v3
-#      - run: rustup toolchain install stable --profile minimal
-#      - uses: Swatinem/rust-cache@v2
-#
-#      - name: Test
-#        run: cargo test --release --no-fail-fast
-#      - name: Build
-#        run: cargo build --release
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: rustup toolchain install stable --profile minimal
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Test
+        run: cargo test --release --no-fail-fast
+      - name: Build
+        run: cargo build --release
 
   publish:
     if: ${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' }}
@@ -39,6 +39,9 @@ jobs:
     concurrency:
       group: production
       cancel-in-progress: true
+
+    outputs:
+      tag: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
 
     steps:
       - name: Checkout repository
@@ -72,11 +75,11 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=branch
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
             type=sha
+            type=ref,event=branch
           flavor: |
             latest=auto
 
@@ -103,3 +106,27 @@ jobs:
         # This step uses the identity token to provision an ephemeral certificate
         # against the sigstore community Fulcio instance.
         run: cosign sign ${TAGS}
+
+  deploy:
+    if: ${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' }}
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Deployment API Token
+        id: token
+        uses: fjogeleit/http-request-action@main
+        with:
+          url: ${{secrets.DEPLOY_AUTH_URL}}
+          method: 'POST'
+          timeout: 600000
+          data: 'grant_type=password&prompt=none&client_id=kube-environment&scope=openid&username=${{secrets.DEPLOY_USERNAME}}&password=${{secrets.DEPLOY_PASSWORD}}'
+          contentType: "application/x-www-form-urlencoded"
+
+      - name: Update
+        id: refresh
+        uses: fjogeleit/http-request-action@main
+        with:
+          url: "${{DEPLOY_URL}}?image=${{needs.publish.tag}}"
+          method: 'POST'
+          timeout: 600000
+          bearerToken: ${{ fromJson(steps.token.outputs).access_token }}
