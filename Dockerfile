@@ -10,7 +10,7 @@ ENV CXX_aarch64_unknown_linux_gnu=aarch64-linux-gnu-g++
 RUN <<-EOF
 case "$TARGETPLATFORM" in
   "linux/arm64")
-    apt-get update && apt-get install -qq g++-aarch64-linux-gnu libc6-dev-arm64-cross libssl-dev
+    apt-get update && apt-get install -qq g++-aarch64-linux-gnu libc6-dev-arm64-cross
     echo vendored > /rust_features.txt
     echo aarch64-unknown-linux-gnu > /rust_target.txt ;;
   "linux/amd64")
