@@ -78,7 +78,7 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
-            type=sha
+            type=sha,priority=650
             type=ref,event=branch
           flavor: |
             latest=auto
@@ -119,7 +119,15 @@ jobs:
           url: ${{secrets.DEPLOY_AUTH_URL}}
           method: 'POST'
           timeout: 600000
-          data: 'grant_type=password&prompt=none&client_id=kube-environment&scope=openid&username=${{secrets.DEPLOY_USERNAME}}&password=${{secrets.DEPLOY_PASSWORD}}'
+          data: |
+            {
+              "grant_type":"password",
+              "prompt":"none", 
+              "client_id": "kube-environment",
+              "scope": "openid",
+              "username": "${{secrets.DEPLOY_USERNAME}}",
+              "password": "${{secrets.DEPLOY_PASSWORD}}"
+            }
           contentType: "application/x-www-form-urlencoded"
 
       - name: Update
