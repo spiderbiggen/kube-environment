@@ -83,7 +83,7 @@ async fn patch_deployment_image(
 ) -> anyhow::Result<Deployment, KubeError> {
     let params = PatchParams {
         dry_run: false,
-        force: false,
+        force: true,
         field_manager: Some("kube-environment".into()),
         field_validation: Some(ValidationDirective::Strict),
     };
