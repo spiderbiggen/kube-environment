@@ -135,7 +135,7 @@ jobs:
         id: refresh
         uses: fjogeleit/http-request-action@main
         with:
-          url: "${{secrets.DEPLOY_URL}}?image=${{needs.publish.tag}}"
+          url: "${{secrets.DEPLOY_URL}}?image=${{needs.publish.outputs.tag}}"
           method: 'PATCH'
           timeout: 600000
           bearerToken: ${{ fromJson(steps.token.outputs.response).access_token }}
