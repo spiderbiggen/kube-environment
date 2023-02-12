@@ -119,7 +119,7 @@ jobs:
           url: ${{secrets.DEPLOY_AUTH_URL}}
           method: 'POST'
           timeout: 600000
-          data: |
+          data: >-
             {
               "grant_type":"password",
               "prompt":"none", 
