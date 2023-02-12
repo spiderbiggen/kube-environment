@@ -28,6 +28,7 @@ jobs:
 
   publish:
     if: ${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' }}
+    needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -137,4 +138,4 @@ jobs:
           url: "${{secrets.DEPLOY_URL}}?image=${{needs.publish.tag}}"
           method: 'POST'
           timeout: 600000
-          bearerToken: ${{ fromJson(steps.token.outputs).access_token }}
+          bearerToken: ${{ fromJson(steps.token.outputs.response).access_token }}
