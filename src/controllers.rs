@@ -21,7 +21,7 @@ pub(crate) async fn query(
     Path(name): Path<String>,
     AuthState(user): AuthState,
     State(state): State<AppState>,
-) -> anyhow::Result<Json<Value>, Response> {
+) -> Result<Json<Value>, Response> {
     validate_allowed_app(&user, &name)?;
 
     let deployment_api: Api<Deployment> = Api::default_namespaced(state.kube_client);
@@ -35,7 +35,7 @@ pub(crate) async fn deploy(
     Query(query): Query<DeployQuery>,
     AuthState(user): AuthState,
     State(state): State<AppState>,
-) -> anyhow::Result<Json<Value>, Response> {
+) -> Result<Json<Value>, Response> {
     validate_allowed_app(&user, &name)?;
     validate_allowed_image(&user, &query.image)?;
 
@@ -50,7 +50,7 @@ pub(crate) async fn deploy(
     }
 }
 
-fn validate_allowed_app(user: &User, name: &String) -> anyhow::Result<(), Response> {
+fn validate_allowed_app(user: &User, name: &String) -> Result<(), Response> {
     if user.allowed_apps.contains(&name) {
         Ok(())
     } else {
@@ -58,7 +58,7 @@ fn validate_allowed_app(user: &User, name: &String) -> anyhow::Result<(), Respon
     }
 }
 
-fn validate_allowed_image(user: &User, image: &str) -> anyhow::Result<(), Response> {
+fn validate_allowed_image(user: &User, image: &str) -> Result<(), Response> {
     let option = image.rsplit_once(':');
     if let Some((unversioned_image, _)) = option {
         if user.allowed_images.iter().any(|s| s == unversioned_image) {
@@ -80,7 +80,7 @@ async fn patch_deployment_image(
     deployment_api: Api<Deployment>,
     name: &str,
     image: &str,
-) -> anyhow::Result<Deployment, KubeError> {
+) -> Result<Deployment, KubeError> {
     let params = PatchParams {
         dry_run: false,
         force: true,
@@ -106,7 +106,7 @@ async fn patch_deployment_image(
     deployment_api.patch(name, &params, &patch).await
 }
 
-async fn get_deployment(api: &Api<Deployment>, name: &str) -> anyhow::Result<Deployment, Response> {
+async fn get_deployment(api: &Api<Deployment>, name: &str) -> Result<Deployment, Response> {
     api.get(name)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())

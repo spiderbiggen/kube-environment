@@ -2,7 +2,7 @@ name: Deployment
 
 on:
   push:
-    branches: [ '*' ]
+    branches: [ 'master' ]
     # Publish semver tags as releases.
     tags: [ 'v*.*.*' ]
 
@@ -51,7 +51,6 @@ jobs:
       # Install the cosign tool except on PR
       # https://github.com/sigstore/cosign-installer
       - name: Install cosign
-        if: github.event_name != 'pull_request'
         uses: sigstore/cosign-installer@main
 
 

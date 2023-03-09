@@ -37,15 +37,10 @@ impl FromRequestParts<AppState> for AuthState {
             .and_then(|h| h.to_str().ok())
             .ok_or(StatusCode::UNAUTHORIZED)?;
 
-        let mut url = state.config.openid_url.clone();
-        url.path_segments_mut()
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
-            .push("realms")
-            .push(&state.config.openid_realm)
-            .extend(&["protocol", "openid-connect", "userinfo"]);
-
         let client = state.reqwest_client.clone();
-        let req = client.get(url).header("Authorization", session_token);
+        let req = client
+            .get(&state.config.openid_uri)
+            .header("Authorization", session_token);
         let response = req.send().await;
 
         match response {

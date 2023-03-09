@@ -4,15 +4,13 @@ use std::fmt::{Debug, Formatter};
 
 #[derive(Clone, Deserialize)]
 pub struct Config {
-    pub openid_url: url::Url,
-    pub openid_realm: String,
+    pub openid_uri: url::Url,
 }
 
 impl Debug for Config {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Config")
-            .field("openid_url", &self.openid_url.as_str())
-            .field("openid_realm", &self.openid_realm)
+            .field("openid_uri", &self.openid_uri.as_str())
             .finish()
     }
 }
