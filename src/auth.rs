@@ -39,7 +39,7 @@ impl FromRequestParts<AppState> for AuthState {
 
         let client = state.reqwest_client.clone();
         let req = client
-            .get(&state.config.openid_uri)
+            .get(state.config.openid_uri.clone())
             .header("Authorization", session_token);
         let response = req.send().await;
 
