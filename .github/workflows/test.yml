@@ -2,7 +2,11 @@ name: Tets
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize, ready_for_review]
+    types: [synchronize, ready_for_review]
+    paths:
+      - "**"
+      - "!/*.md"
+      - "!/**.md"
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -13,7 +17,6 @@ env:
 
 jobs:
   test:
-    if: !github.event.pull_request.draft
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
