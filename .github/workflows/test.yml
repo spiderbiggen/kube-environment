@@ -1,19 +1,8 @@
-name: Tets
+name: Test
 
 on:
   pull_request:
-    types: [synchronize, ready_for_review]
-    paths:
-      - "**"
-      - "!/*.md"
-      - "!/**.md"
-
-env:
-  # Use docker.io for Docker Hub if empty
-  REGISTRY: ghcr.io
-  # github.repository as <account>/<repo>
-  IMAGE_NAME: ${{ github.repository }}
-
+    types: [opened, reopened, synchronize, ready_for_review]
 
 jobs:
   test:
