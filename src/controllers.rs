@@ -5,6 +5,7 @@ use http::StatusCode;
 use k8s_openapi::api::apps::v1::Deployment;
 use kube::api::{Patch, PatchParams, ValidationDirective};
 use kube::{Api, Error as KubeError};
+use lazy_static::lazy_static;
 use serde::Deserialize;
 use serde_json::{json, Value};
 use tracing::instrument;
@@ -12,13 +13,15 @@ use tracing::instrument;
 use crate::auth::{AuthState, User};
 use crate::models::AppState;
 
-const FIELD_MANAGER: &'static str = "kube-environment";
-static PATCH_PARAMS: &PatchParams = &PatchParams {
-    dry_run: false,
-    force: true,
-    field_manager: Some(FIELD_MANAGER.into()),
-    field_validation: Some(ValidationDirective::Strict),
-};
+const FIELD_MANAGER: &str = "kube-environment";
+lazy_static! {
+    static ref PATCH_PARAMS: PatchParams = PatchParams {
+        dry_run: false,
+        force: true,
+        field_manager: Some(String::from(FIELD_MANAGER)),
+        field_validation: Some(ValidationDirective::Strict),
+    };
+}
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct DeployQuery {
