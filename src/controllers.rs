@@ -1,5 +1,3 @@
-use crate::auth::{AuthState, User};
-use crate::models::AppState;
 use axum::extract::{Path, Query, State};
 use axum::response::{IntoResponse, Response};
 use axum::Json;
@@ -11,9 +9,21 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 use tracing::instrument;
 
+use crate::auth::{AuthState, User};
+use crate::models::AppState;
+
+const FIELD_MANAGER: &'static str = "kube-environment";
+static PATCH_PARAMS: &PatchParams = &PatchParams {
+    dry_run: false,
+    force: true,
+    field_manager: Some(FIELD_MANAGER.into()),
+    field_validation: Some(ValidationDirective::Strict),
+};
+
 #[derive(Debug, Deserialize)]
 pub(crate) struct DeployQuery {
     image: String,
+    container: Option<String>,
 }
 
 #[instrument]
@@ -41,7 +51,8 @@ pub(crate) async fn deploy(
 
     let deployment_api: Api<Deployment> = Api::default_namespaced(state.kube_client);
 
-    match patch_deployment_image(deployment_api, &name, &query.image).await {
+    let container_name = query.container.as_ref().unwrap_or(&name);
+    match patch_deployment_image(deployment_api, &name, &query.image, container_name).await {
         Ok(patched) => Ok(Json(deployment_to_json(patched))),
         Err(e) => {
             tracing::error!(error =%e, "failed to patch deployment");
@@ -51,7 +62,7 @@ pub(crate) async fn deploy(
 }
 
 fn validate_allowed_app(user: &User, name: &String) -> Result<(), Response> {
-    if user.allowed_apps.contains(&name) {
+    if user.allowed_apps.contains(name) {
         Ok(())
     } else {
         Err(StatusCode::FORBIDDEN.into_response())
@@ -60,8 +71,8 @@ fn validate_allowed_app(user: &User, name: &String) -> Result<(), Response> {
 
 fn validate_allowed_image(user: &User, image: &str) -> Result<(), Response> {
     let option = image.rsplit_once(':');
-    if let Some((unversioned_image, _)) = option {
-        if user.allowed_images.iter().any(|s| s == unversioned_image) {
+    if let Some((image_name, _)) = option {
+        if user.allowed_images.iter().any(|s| s == image_name) {
             return Ok(());
         }
     }
@@ -78,15 +89,10 @@ fn validate_allowed_image(user: &User, image: &str) -> Result<(), Response> {
 
 async fn patch_deployment_image(
     deployment_api: Api<Deployment>,
-    name: &str,
+    deployment_name: &str,
     image: &str,
+    container_name: &str,
 ) -> Result<Deployment, KubeError> {
-    let params = PatchParams {
-        dry_run: false,
-        force: true,
-        field_manager: Some("kube-environment".into()),
-        field_validation: Some(ValidationDirective::Strict),
-    };
     let patch = json!({
         "apiVersion": "apps/v1",
         "kind": "Deployment",
@@ -94,7 +100,7 @@ async fn patch_deployment_image(
             "template": {
                 "spec": {
                     "containers": [{
-                        "name": name,
+                        "name": container_name,
                         "image": image,
                         "imagePullPolicy": "IfNotPresent"
                     }]
@@ -102,8 +108,9 @@ async fn patch_deployment_image(
             }
         }
     });
-    let patch = Patch::Apply(patch);
-    deployment_api.patch(name, &params, &patch).await
+    deployment_api
+        .patch(deployment_name, &PATCH_PARAMS, &Patch::Apply(patch))
+        .await
 }
 
 async fn get_deployment(api: &Api<Deployment>, name: &str) -> Result<Deployment, Response> {
