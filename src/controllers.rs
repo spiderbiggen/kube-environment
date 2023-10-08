@@ -17,7 +17,7 @@ const FIELD_MANAGER: &str = "kube-environment";
 lazy_static! {
     static ref PATCH_PARAMS: PatchParams = PatchParams {
         dry_run: false,
-        force: true,
+        force: false,
         field_manager: Some(String::from(FIELD_MANAGER)),
         field_validation: Some(ValidationDirective::Strict),
     };
@@ -59,7 +59,13 @@ pub(crate) async fn deploy(
         Ok(patched) => Ok(Json(deployment_to_json(patched))),
         Err(e) => {
             tracing::error!(error =%e, "failed to patch deployment");
-            Err(StatusCode::INTERNAL_SERVER_ERROR.into_response())
+            match e {
+                KubeError::Api(response) => match StatusCode::from_u16(response.code) {
+                    Ok(status_code) => Err((status_code, response.message).into_response()),
+                    Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR.into_response()),
+                },
+                _ => Err(StatusCode::INTERNAL_SERVER_ERROR.into_response()),
+            }
         }
     }
 }
@@ -112,7 +118,7 @@ async fn patch_deployment_image(
         }
     });
     deployment_api
-        .patch(deployment_name, &PATCH_PARAMS, &Patch::Apply(patch))
+        .patch(deployment_name, &PATCH_PARAMS, &Patch::Strategic(patch))
         .await
 }
 
