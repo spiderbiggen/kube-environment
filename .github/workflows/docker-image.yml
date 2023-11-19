@@ -68,7 +68,7 @@ jobs:
           - {
             os: "ubuntu-latest",
             target: "x86_64-unknown-linux-gnu",
-            cross: false,
+            cross: true,
           }
           - {
             os: "ubuntu-latest",

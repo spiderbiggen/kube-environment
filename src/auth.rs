@@ -1,7 +1,7 @@
 use axum::async_trait;
 use axum::extract::FromRequestParts;
-use http::request::Parts;
-use http::StatusCode;
+use axum::http::request::Parts;
+use axum::http::StatusCode;
 use serde::Deserialize;
 use tracing::instrument;
 

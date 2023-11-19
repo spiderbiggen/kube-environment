@@ -3,9 +3,6 @@ name: CI
 on:
   workflow_dispatch:
   pull_request:
-  push:
-    branches:
-      - master
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -60,8 +57,6 @@ jobs:
     needs: test
     runs-on: ${{ matrix.info.os }}
     timeout-minutes: 18
-    outputs:
-      executable: target/${{ matrix.info.target }}/release/kube-environment
     strategy:
       fail-fast: false
       matrix:
@@ -97,12 +92,6 @@ jobs:
         uses: ClementTsang/cargo-action@v0.0.6
         with:
           command: build
-          args: --all-targets --verbose --target=${{ matrix.info.target }} --locked --release
+          args: --all-targets --verbose --target=${{ matrix.info.target }} --locked
           use-cross: ${{ matrix.info.cross }}
           cross-version: ${{ matrix.info.cross-version || '0.2.5' }}
-
-      - uses: actions/upload-artifact@v3
-        with:
-          path: |
-            target/*/release/kube-environment
-            target/*/release/kube-environment.exe
