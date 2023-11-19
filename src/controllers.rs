@@ -1,7 +1,7 @@
 use axum::extract::{Path, Query, State};
+use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
-use http::StatusCode;
 use k8s_openapi::api::apps::v1::Deployment;
 use kube::api::{Patch, PatchParams, ValidationDirective};
 use kube::{Api, Error as KubeError};
