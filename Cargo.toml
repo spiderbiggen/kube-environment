@@ -14,7 +14,7 @@ all = "deny"
 pedantic = "warn"
 
 [profile.release]
-lto = "full"
+lto = "fat"
 strip = "symbols"
 
 [dependencies]
