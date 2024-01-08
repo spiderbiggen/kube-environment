@@ -8,17 +8,16 @@ use kube::{Api, Error as KubeError};
 use lazy_static::lazy_static;
 use serde::Deserialize;
 use serde_json::{json, Value};
-use tracing::instrument;
+use tracing::{error, instrument};
 
 use crate::auth::{AuthState, User};
 use crate::models::AppState;
 
-const FIELD_MANAGER: &str = "kube-environment";
 lazy_static! {
     static ref PATCH_PARAMS: PatchParams = PatchParams {
         dry_run: false,
         force: false,
-        field_manager: Some(String::from(FIELD_MANAGER)),
+        field_manager: Some(String::from(env!("CARGO_BIN_NAME"))),
         field_validation: Some(ValidationDirective::Strict),
     };
 }
@@ -27,6 +26,7 @@ lazy_static! {
 pub(crate) struct DeployQuery {
     image: String,
     container: Option<String>,
+    namespace: Option<String>,
 }
 
 #[instrument]
@@ -52,14 +52,17 @@ pub(crate) async fn deploy(
     validate_allowed_app(&user, &name)?;
     validate_allowed_image(&user, &query.image)?;
 
-    let deployment_api: Api<Deployment> = Api::default_namespaced(state.kube_client);
+    let namespace = query
+        .namespace
+        .unwrap_or_else(|| state.kube_client.default_namespace().to_string());
+    let deployment_api: Api<Deployment> = Api::namespaced(state.kube_client, &namespace);
 
-    let container_name = query.container.as_ref().unwrap_or(&name);
+    let container_name = query.container.as_deref().unwrap_or(&name);
     match patch_deployment_image(deployment_api, &name, &query.image, container_name).await {
         Ok(patched) => Ok(Json(deployment_to_json(patched))),
-        Err(e) => {
-            tracing::error!(error =%e, "failed to patch deployment");
-            match e {
+        Err(err) => {
+            error!("Failed to patch deployment: {err}");
+            match err {
                 KubeError::Api(response) => match StatusCode::from_u16(response.code) {
                     Ok(status_code) => Err((status_code, response.message).into_response()),
                     Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR.into_response()),
@@ -71,7 +74,7 @@ pub(crate) async fn deploy(
 }
 
 fn validate_allowed_app(user: &User, name: &str) -> Result<(), Response> {
-    if user.allowed_apps.contains(name) {
+    if user.allowed_apps.iter().any(|s| s == name) {
         Ok(())
     } else {
         Err(StatusCode::FORBIDDEN.into_response())
@@ -79,16 +82,16 @@ fn validate_allowed_app(user: &User, name: &str) -> Result<(), Response> {
 }
 
 fn validate_allowed_image(user: &User, image: &str) -> Result<(), Response> {
-    let option = image.rsplit_once(':');
-    if let Some((image_name, _)) = option {
-        if user.allowed_images.contains(image_name) {
+    if let Some((image_name, _)) = image.rsplit_once(':') {
+        if user.allowed_images.iter().any(|s| s == image_name) {
             return Ok(());
         }
     }
 
     let pair = (
-        StatusCode::BAD_REQUEST,
+        StatusCode::FORBIDDEN,
         Json(json!({
+            "status": StatusCode::FORBIDDEN.as_u16(),
             "error": "only allowed images can be deployed",
             "allowed_images": user.allowed_images,
         })),
@@ -123,9 +126,10 @@ async fn patch_deployment_image(
 }
 
 async fn get_deployment(api: &Api<Deployment>, name: &str) -> Result<Deployment, Response> {
-    api.get(name)
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())
+    api.get(name).await.map_err(|err| {
+        error!("Failed to query kubernetes cluster. {err}");
+        StatusCode::INTERNAL_SERVER_ERROR.into_response()
+    })
 }
 
 fn deployment_to_json(mut deployment: Deployment) -> Value {
