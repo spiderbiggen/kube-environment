@@ -3,7 +3,7 @@ use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
 use axum::http::StatusCode;
 use serde::Deserialize;
-use tracing::instrument;
+use tracing::{error, instrument};
 
 use crate::models::AppState;
 
@@ -51,14 +51,14 @@ impl FromRequestParts<AppState> for AuthState {
                         allowed_images: user_info.allowed_images,
                     })),
                     Err(e) => {
-                        tracing::error!(error =%e, "Failed to parse user info");
+                        error!(error =%e, "Failed to parse user info");
                         Err(StatusCode::INTERNAL_SERVER_ERROR)
                     }
                 }
             }
             Ok(response) => match response.status() {
-                StatusCode::UNAUTHORIZED => Err(StatusCode::UNAUTHORIZED),
-                StatusCode::FORBIDDEN => Err(StatusCode::FORBIDDEN),
+                reqwest::StatusCode::UNAUTHORIZED => Err(StatusCode::UNAUTHORIZED),
+                reqwest::StatusCode::FORBIDDEN => Err(StatusCode::FORBIDDEN),
                 status => {
                     let body: Option<serde_json::Value> = response.json().await.ok();
                     tracing::error!(status =%status, body =? body, "Failed to parse user info");

@@ -70,7 +70,7 @@ pub(crate) async fn deploy(
     }
 }
 
-fn validate_allowed_app(user: &User, name: &String) -> Result<(), Response> {
+fn validate_allowed_app(user: &User, name: &str) -> Result<(), Response> {
     if user.allowed_apps.contains(name) {
         Ok(())
     } else {
@@ -81,7 +81,7 @@ fn validate_allowed_app(user: &User, name: &String) -> Result<(), Response> {
 fn validate_allowed_image(user: &User, image: &str) -> Result<(), Response> {
     let option = image.rsplit_once(':');
     if let Some((image_name, _)) = option {
-        if user.allowed_images.iter().any(|s| s == image_name) {
+        if user.allowed_images.contains(image_name) {
             return Ok(());
         }
     }
