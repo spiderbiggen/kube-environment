@@ -92,8 +92,8 @@ jobs:
           cross-version: ${{ matrix.info.cross-version || '0.2.5' }}
 
       - uses: actions/upload-artifact@v4
-        name: artifact ${{ matrix.info.target }}
         with:
+          name: artifact ${{ matrix.info.target }}
           path: |
             target/*/release/kube-environment
             target/*/release/kube-environment.exe
