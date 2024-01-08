@@ -1,14 +1,16 @@
 #![deny(clippy::all)]
 #![warn(clippy::pedantic)]
 
-use std::net::SocketAddr;
+use std::net::{IpAddr, Ipv6Addr, SocketAddr};
 
 use anyhow::Result;
 use axum::{routing::get, Router};
+use tokio::net::TcpListener;
 use tower::ServiceBuilder;
 use tower_http::compression::CompressionLayer;
 use tower_http::decompression::DecompressionLayer;
 use tower_http::trace::TraceLayer;
+use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use crate::models::AppState;
@@ -16,6 +18,8 @@ use crate::models::AppState;
 mod auth;
 mod controllers;
 mod models;
+
+const SOCKET: &SocketAddr = &SocketAddr::new(IpAddr::V6(Ipv6Addr::UNSPECIFIED), 8000);
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -27,7 +31,7 @@ async fn main() -> Result<()> {
 
     let state = AppState::from_env().await?;
 
-    let app = Router::new()
+    let router = Router::new()
         .route(
             "/deployments/:name",
             get(controllers::query).patch(controllers::deploy),
@@ -40,9 +44,8 @@ async fn main() -> Result<()> {
                 .layer(DecompressionLayer::new()),
         );
 
-    let addr = SocketAddr::from(([0, 0, 0, 0], 8000));
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await?;
+    let listener = TcpListener::bind(SOCKET).await?;
+    info!("listening for requests on {SOCKET}");
+    axum::serve(listener, router).await?;
     Ok(())
 }
