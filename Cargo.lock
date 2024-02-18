@@ -902,20 +902,6 @@ dependencies = [
 
 [[package]]
 name = "k8s-openapi"
-version = "0.20.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "edc3606fd16aca7989db2f84bb25684d0270c6d6fa1dbcd0025af7b4130523a6"
-dependencies = [
- "base64",
- "bytes",
- "chrono",
- "serde",
- "serde-value",
- "serde_json",
-]
-
-[[package]]
-name = "k8s-openapi"
 version = "0.21.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "550f99d93aa4c2b25de527bce492d772caf5e21d7ac9bd4b508ba781c8d91e30"
@@ -933,7 +919,7 @@ version = "0.88.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "462fe330a0617b276ec864c2255810adcdf519ecb6844253c54074b2086a97bc"
 dependencies = [
- "k8s-openapi 0.21.1",
+ "k8s-openapi",
  "kube-client",
  "kube-core",
  "kube-derive",
@@ -958,7 +944,7 @@ dependencies = [
  "hyper-rustls",
  "hyper-timeout",
  "jsonpath-rust",
- "k8s-openapi 0.21.1",
+ "k8s-openapi",
  "kube-core",
  "pem",
  "pin-project",
@@ -986,7 +972,7 @@ dependencies = [
  "form_urlencoded",
  "http 0.2.11",
  "json-patch",
- "k8s-openapi 0.21.1",
+ "k8s-openapi",
  "once_cell",
  "schemars",
  "serde",
@@ -1015,7 +1001,7 @@ dependencies = [
  "axum",
  "envy",
  "futures",
- "k8s-openapi 0.20.0",
+ "k8s-openapi",
  "kube",
  "lazy_static",
  "reqwest",
@@ -1042,7 +1028,7 @@ dependencies = [
  "futures",
  "hashbrown",
  "json-patch",
- "k8s-openapi 0.21.1",
+ "k8s-openapi",
  "kube-client",
  "parking_lot",
  "pin-project",
