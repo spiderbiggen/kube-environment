@@ -184,7 +184,7 @@ jobs:
             {
               "grant_type":"password",
               "prompt":"none",
-              "client_id": "kube-environment",
+              "client_id": "${{secrets.DEPLOY_CLIENT_ID}}",
               "scope": "openid",
               "username": "${{secrets.DEPLOY_USERNAME}}",
               "password": "${{secrets.DEPLOY_PASSWORD}}"

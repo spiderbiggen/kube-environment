@@ -26,7 +26,9 @@ pub(crate) struct AuthState(pub User);
 impl FromRequestParts<AppState> for AuthState {
     type Rejection = StatusCode;
 
-    #[instrument(name = "AuthState", ret, skip_all, fields(method =% parts.method, uri =% parts.uri, config =? state.config))]
+    #[instrument(name = "AuthState", ret, skip_all, fields(
+        method = % parts.method, uri = % parts.uri, config = ? state.config
+    ))]
     async fn from_request_parts(
         parts: &mut Parts,
         state: &AppState,
@@ -51,22 +53,22 @@ impl FromRequestParts<AppState> for AuthState {
                         allowed_images: user_info.allowed_images,
                     })),
                     Err(e) => {
-                        error!(error =%e, "Failed to parse user info");
+                        error!(error =% e, "Failed to parse user info");
                         Err(StatusCode::INTERNAL_SERVER_ERROR)
                     }
                 }
             }
             Ok(response) => match response.status() {
-                reqwest::StatusCode::UNAUTHORIZED => Err(StatusCode::UNAUTHORIZED),
-                reqwest::StatusCode::FORBIDDEN => Err(StatusCode::FORBIDDEN),
+                StatusCode::UNAUTHORIZED => Err(StatusCode::UNAUTHORIZED),
+                StatusCode::FORBIDDEN => Err(StatusCode::FORBIDDEN),
                 status => {
                     let body: Option<serde_json::Value> = response.json().await.ok();
-                    tracing::error!(status =%status, body =? body, "Failed to parse user info");
+                    error!(status =% status, body =? body, "Failed to parse user info");
                     Err(StatusCode::INTERNAL_SERVER_ERROR)
                 }
             },
             Err(e) => {
-                tracing::error!(error =%e, "Failed to get user info");
+                error!(error =% e, "Failed to get user info");
                 Err(StatusCode::INTERNAL_SERVER_ERROR)
             }
         }
