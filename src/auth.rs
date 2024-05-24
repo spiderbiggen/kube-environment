@@ -46,7 +46,7 @@ impl FromRequestParts<AppState> for AuthState {
                     error!(error =% error, "Failed to parse user info");
                     Err(StatusCode::INTERNAL_SERVER_ERROR)
                 }
-            }
+            },
             Ok(response) => match response.status() {
                 StatusCode::UNAUTHORIZED => Err(StatusCode::UNAUTHORIZED),
                 StatusCode::FORBIDDEN => Err(StatusCode::FORBIDDEN),
