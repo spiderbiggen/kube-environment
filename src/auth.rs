@@ -40,13 +40,11 @@ impl FromRequestParts<AppState> for AuthState {
         let response = req.send().await;
 
         match response {
-            Ok(response) if response.status().is_success() => {
-                match response.json::<User>().await {
-                    Ok(user) => Ok(AuthState(user)),
-                    Err(error) => {
-                        error!(error =% error, "Failed to parse user info");
-                        Err(StatusCode::INTERNAL_SERVER_ERROR)
-                    }
+            Ok(response) if response.status().is_success() => match response.json::<User>().await {
+                Ok(user) => Ok(AuthState(user)),
+                Err(error) => {
+                    error!(error =% error, "Failed to parse user info");
+                    Err(StatusCode::INTERNAL_SERVER_ERROR)
                 }
             }
             Ok(response) => match response.status() {
