@@ -59,7 +59,7 @@ impl FromRequestParts<AppState> for AuthState {
                 }
             }
             Ok(response) => match response.status() {
-                status @ StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => Err(status),
+                status @ StatusCode::UNAUTHORIZED | status @ StatusCode::FORBIDDEN => Err(status),
                 status => {
                     let body: Option<serde_json::Value> = response.json().await.ok();
                     error!(status =% status, body =? body, "Failed to parse user info");
