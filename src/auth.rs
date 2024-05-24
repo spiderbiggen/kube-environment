@@ -8,12 +8,6 @@ use tracing::{error, instrument};
 use crate::models::AppState;
 
 #[derive(Debug, Clone, Deserialize)]
-struct UserInfo {
-    allowed_images: Vec<String>,
-    groups: Vec<String>,
-}
-
-#[derive(Debug, Clone)]
 pub(crate) struct User {
     pub allowed_apps: Vec<String>,
     pub allowed_images: Vec<String>,
@@ -46,18 +40,13 @@ impl FromRequestParts<AppState> for AuthState {
         let response = req.send().await;
 
         match response {
-            Ok(response) if response.status().is_success() => {
-                match response.json::<UserInfo>().await {
-                    Ok(user_info) => Ok(AuthState(User {
-                        allowed_apps: user_info.groups,
-                        allowed_images: user_info.allowed_images,
-                    })),
-                    Err(e) => {
-                        error!(error =% e, "Failed to parse user info");
-                        Err(StatusCode::INTERNAL_SERVER_ERROR)
-                    }
+            Ok(response) if response.status().is_success() => match response.json::<User>().await {
+                Ok(user) => Ok(AuthState(user)),
+                Err(error) => {
+                    error!(error =% error, "Failed to parse user info");
+                    Err(StatusCode::INTERNAL_SERVER_ERROR)
                 }
-            }
+            },
             Ok(response) => match response.status() {
                 StatusCode::UNAUTHORIZED => Err(StatusCode::UNAUTHORIZED),
                 StatusCode::FORBIDDEN => Err(StatusCode::FORBIDDEN),
